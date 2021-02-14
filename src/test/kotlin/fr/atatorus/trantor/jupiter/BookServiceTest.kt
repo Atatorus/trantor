@@ -176,7 +176,18 @@
  *
  *    END OF TERMS AND CONDITIONS
  *
- *    Copyright 2021 Denis Thomas
+ *    APPENDIX: How to apply the Apache License to your work.
+ *
+ *       To apply the Apache License to your work, attach the following
+ *       boilerplate notice, with the fields enclosed by brackets "[]"
+ *       replaced with your own identifying information. (Don't include
+ *       the brackets!)  The text should be enclosed in the appropriate
+ *       comment syntax for the file format. We also recommend that a
+ *       file or class name and description of purpose be included on the
+ *       same "printed page" as the copyright notice for easier
+ *       identification within third-party archives.
+ *
+ *    Copyright [2021] [Denis Thomas]
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -191,30 +202,164 @@
  *    limitations under the License.
  *
  */
-package fr.atatorus.trantor.models
 
-/**
- * The report for several tests. In unit testing context, it is equivalent to a test class.
- *
- * A test report is a collection of many [Test].
- *
- * @param title the name of this test, by example 'User service test'.
- * @param descriptions List of paragraphs used to describe the test.
- *
- */
-class TestsReport(val title: String, descriptions: List<String>) {
+package fr.atatorus.trantor.jupiter
 
-    val descriptions: MutableList<String> = arrayListOf()
-    val tests: MutableMap<String, Test> = hashMapOf()
+import fr.atatorus.trantor.ReportConfiguration
+import fr.atatorus.trantor.totest.Book
+import fr.atatorus.trantor.totest.BookService
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.api.extension.RegisterExtension
+import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
-    init {
-        this.descriptions += descriptions
+class BookServiceTest {
+
+    private lateinit var service: BookService
+
+    companion object {
+        @JvmField
+        @RegisterExtension
+        val reporter = ReportConfiguration.jupiterReporting(
+            "BookServiceTest for JUnit Jupiter",
+            "Just a little CRUD test service"
+        )
     }
 
-    operator fun get(testName: String): Test? = tests[testName]
+    @BeforeEach
+    fun beforeEach() {
+        cleanDatabase()
+        service = BookService()
+    }
 
-    operator fun set(testName: String, test: Test) {
-        tests[testName] = test
+    private fun cleanDatabase() {
+        BookService.books.clear()
+    }
+
+    @Test
+    fun createBookTest() {
+
+        reporter.describeNewTest("Book creation test", 0, "We create just one Book")
+        reporter.nominalCase("Book creation", "Book is saved in database")
+
+        val book = service.createBook("Marcel Durat", "Souvenir d'un as")
+
+        with(book) {
+            assertNotNull(id)
+            assertEquals("Souvenir d'un as", title)
+            assertEquals("Marcel Durat", author)
+        }
+
+        assertEquals(book, service.getBook(book.id))
+
+        reporter.setResponseExample(book.toString())
+    }
+
+    @Test
+    fun canCreateTwoBooksWithSameTitleAndAuthorTest() {
+
+        reporter.currentTest("Book creation test")
+        reporter.alternateCase("Book creation with existing title and author", "New book is saved in database")
+
+        val book1 = service.createBook("Marcel Durat", "Souvenir d'un as")
+        val book2 = service.createBook("Marcel Durat", "Souvenir d'un as")
+
+        assertNotEquals(book1.id, book2.id)
+    }
+
+    @Test
+    fun getBookByAuthorTest() {
+
+        reporter.describeNewTest("Getting book by author", 1)
+        reporter.nominalCase("Get all books for an author", "The books of this author")
+
+        service.createBook("Marcel Durat", "Souvenir d'un as")
+        service.createBook("Marcel Durat", "Comment je me suis crashé")
+
+        val books = service.getBooks("Marcel Durat")
+
+        assertEquals(2, books.size)
+        assertNotNull(books.filter { it.title == "Souvenir d'un as" })
+        assertNotNull(books.filter { it.title == "Comment je me suis crashé" })
+
+        reporter.setResponseExample(books.toString())
+    }
+
+    @Test
+    fun getBooksForUnexistingAuthorTest() {
+
+        reporter.currentTest("Getting book by author")
+        reporter.alternateCase("No books for this author", "Get an empty list")
+
+        assertTrue(service.getBooks("Marcel Durat").isEmpty())
+    }
+
+    @Test
+    fun updateBookTest() {
+
+        reporter.describeNewTest("Update Book", 2, "We create a book, an we change author and title")
+        reporter.nominalCase("Update book", "Book in database must be updated")
+
+        val book = service.createBook("Marcel Durat", "Souvenir d'un as")
+
+        val updated = service.updateBook(book, "Henri Durat", "Comment je me suis crashé")
+
+        with(updated) {
+            assertEquals("Comment je me suis crashé", updated.title)
+            assertEquals("Henri Durat", updated.author)
+        }
+
+        assertEquals(updated, service.getBook(book.id))
+
+        reporter.setResponseExample(updated.toString())
+    }
+
+    @Test
+    fun updateUnexistingBookTest() {
+        reporter.currentTest("Update Book")
+        reporter.errorCase("Update unexisting book", "We get an exception")
+
+        val book = Book(42, "Marcel Durat", "Souvenir d'un as")
+
+        assertThrows<RuntimeException> {
+            val updated = service.updateBook(book, "Henri Durat", "Comment je me suis crashé")
+        }
+    }
+
+    @Test
+    fun deleteBookTest() {
+
+        reporter.describeNewTest("Delete book", 3, "We create a book, and next we delete it")
+        reporter.nominalCase("Book deletion", "Book must be deleted from database")
+
+        val book = service.createBook("Marcel Durat", "Souvenir d'un as")
+
+        service.deleteBook(book)
+
+        assertNull(service.getBook(book.id))
+    }
+
+    @Test
+    fun cannotDeleteUnexistingBookTest() {
+
+        reporter.currentTest("Delete book")
+        reporter.errorCase("Delete unexisting book", "We get an exception")
+
+        reporter.describeNewTest("Delete book", 3, "We create a book, and next we delete it")
+        reporter.nominalCase("Book deletion", "Book must be deleted from database")
+
+        val book = service.createBook("Marcel Durat", "Souvenir d'un as")
+
+        service.deleteBook(book)
+
+        assertThrows<RuntimeException> {
+            service.deleteBook(book)
+        }
     }
 
 }

@@ -176,7 +176,18 @@
  *
  *    END OF TERMS AND CONDITIONS
  *
- *    Copyright 2021 Denis Thomas
+ *    APPENDIX: How to apply the Apache License to your work.
+ *
+ *       To apply the Apache License to your work, attach the following
+ *       boilerplate notice, with the fields enclosed by brackets "[]"
+ *       replaced with your own identifying information. (Don't include
+ *       the brackets!)  The text should be enclosed in the appropriate
+ *       comment syntax for the file format. We also recommend that a
+ *       file or class name and description of purpose be included on the
+ *       same "printed page" as the copyright notice for easier
+ *       identification within third-party archives.
+ *
+ *    Copyright [2021] [Denis Thomas]
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -191,30 +202,45 @@
  *    limitations under the License.
  *
  */
-package fr.atatorus.trantor.models
 
-/**
- * The report for several tests. In unit testing context, it is equivalent to a test class.
- *
- * A test report is a collection of many [Test].
- *
- * @param title the name of this test, by example 'User service test'.
- * @param descriptions List of paragraphs used to describe the test.
- *
- */
-class TestsReport(val title: String, descriptions: List<String>) {
+package fr.atatorus.trantor.jupiter
 
-    val descriptions: MutableList<String> = arrayListOf()
-    val tests: MutableMap<String, Test> = hashMapOf()
+import fr.atatorus.trantor.ReportConfiguration
+import fr.atatorus.trantor.totest.BorrowService
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.RegisterExtension
+import kotlin.test.fail
 
-    init {
-        this.descriptions += descriptions
+class BorrowServiceTest {
+
+    private lateinit var service: BorrowService
+
+    companion object {
+        @JvmField
+        @RegisterExtension
+        val reporter = ReportConfiguration.jupiterReporting(
+            "BorrowService test for JUnit Jupiter",
+            "Just a litle service"
+        )
     }
 
-    operator fun get(testName: String): Test? = tests[testName]
-
-    operator fun set(testName: String, test: Test) {
-        tests[testName] = test
+    @BeforeEach
+    fun beforeEach() {
+        cleanDatabase()
+        service = BorrowService()
     }
+
+    fun cleanDatabase() {
+        BorrowService.borrows.clear()
+    }
+
+    @Test
+    fun userCanBorrowABookTest() {
+        reporter.describeNewTest("user borrowing a book", 1, "On user take a book")
+        reporter.nominalCase("An user borrow a book", "The book is set as borrowed by the user")
+        TODO()
+    }
+
 
 }

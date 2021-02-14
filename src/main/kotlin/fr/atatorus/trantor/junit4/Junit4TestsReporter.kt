@@ -176,18 +176,7 @@
  *
  *    END OF TERMS AND CONDITIONS
  *
- *    APPENDIX: How to apply the Apache License to your work.
- *
- *       To apply the Apache License to your work, attach the following
- *       boilerplate notice, with the fields enclosed by brackets "[]"
- *       replaced with your own identifying information. (Don't include
- *       the brackets!)  The text should be enclosed in the appropriate
- *       comment syntax for the file format. We also recommend that a
- *       file or class name and description of purpose be included on the
- *       same "printed page" as the copyright notice for easier
- *       identification within third-party archives.
- *
- *    Copyright [yyyy] [name of copyright owner]
+ *    Copyright 2021 Denis Thomas
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -206,8 +195,8 @@ package fr.atatorus.trantor.junit4
 
 import fr.atatorus.trantor.builders.HtmlReportBuilder
 import fr.atatorus.trantor.builders.ReportBuilder
-import fr.atatorus.trantor.models.ITestsReport
-import fr.atatorus.trantor.models.TestsReport
+import fr.atatorus.trantor.models.ITestRecorder
+import fr.atatorus.trantor.models.TestRecorder
 import org.junit.rules.TestRule
 import org.junit.runner.Description
 import org.junit.runners.model.Statement
@@ -215,11 +204,10 @@ import org.junit.runners.model.Statement
 /**
  * A [TestRule] used to generate a test report thanks a [ReportBuilder]
  *
- *
- *
  */
-class Junit4TestsReporter private constructor(val reportBuilder: ReportBuilder, testsReport: ITestsReport) : TestRule,
-    ITestsReport by testsReport {
+class Junit4TestsReporter private constructor(val reportBuilder: ReportBuilder, testsRecorder: ITestRecorder) :
+    TestRule,
+    ITestRecorder by testsRecorder {
 
     override fun apply(base: Statement, description: Description): Statement {
         return object : Statement() {
@@ -228,7 +216,7 @@ class Junit4TestsReporter private constructor(val reportBuilder: ReportBuilder, 
                 try {
                     base.evaluate()
                 } finally {
-                    reportBuilder.generateReport(this@Junit4TestsReporter)
+                    reportBuilder.generateReport(report)
                 }
             }
         }
@@ -237,9 +225,8 @@ class Junit4TestsReporter private constructor(val reportBuilder: ReportBuilder, 
     companion object {
 
         @JvmStatic
-        fun htmlReporter(root: String, application: String, title: String, vararg lines: String) =
-            Junit4TestsReporter(HtmlReportBuilder(root, application), TestsReport(title, lines.asList()))
-
+        fun htmlReporter(root: String, application: String, title: String, vararg reportDescriptions: String) =
+            Junit4TestsReporter(HtmlReportBuilder(root, application), TestRecorder(title, *reportDescriptions))
     }
 
 }

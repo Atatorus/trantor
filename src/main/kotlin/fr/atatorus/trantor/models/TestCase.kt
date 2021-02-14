@@ -176,18 +176,7 @@
  *
  *    END OF TERMS AND CONDITIONS
  *
- *    APPENDIX: How to apply the Apache License to your work.
- *
- *       To apply the Apache License to your work, attach the following
- *       boilerplate notice, with the fields enclosed by brackets "[]"
- *       replaced with your own identifying information. (Don't include
- *       the brackets!)  The text should be enclosed in the appropriate
- *       comment syntax for the file format. We also recommend that a
- *       file or class name and description of purpose be included on the
- *       same "printed page" as the copyright notice for easier
- *       identification within third-party archives.
- *
- *    Copyright [yyyy] [name of copyright owner]
+ *    Copyright 2021 Denis Thomas
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -215,15 +204,15 @@ package fr.atatorus.trantor.models
  */
 class TestCase(val description: String, val expected: String, val order: Int) : Comparable<TestCase> {
 
-    var success: Boolean = true
+    var status: TestStatus = TestStatus.successful
     var result: String? = null
 
     /**
      * Called after a successful test
      */
-    fun success() {
-        result = "OK"
-        success = true
+    fun success(result: String = "OK") {
+        this.result = result
+        status = TestStatus.successful
     }
 
     /**
@@ -233,7 +222,28 @@ class TestCase(val description: String, val expected: String, val order: Int) : 
      */
     fun failure(message: String) {
         result = message
-        success = false
+        status = TestStatus.failure
+    }
+
+    /**
+     * Called if test is aborted
+     *
+     * @param message An explanation message
+     */
+    fun aborted(message: String) {
+        result = message
+        status = TestStatus.aborted
+    }
+
+
+    /**
+     * Called if test is ignored
+     *
+     * @param message An explanation message
+     */
+    fun ignored(message: String) {
+        result = message
+        status = TestStatus.ignored
     }
 
     override fun compareTo(other: TestCase) = order.compareTo(other.order)

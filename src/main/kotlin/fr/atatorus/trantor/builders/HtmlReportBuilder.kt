@@ -176,18 +176,7 @@
  *
  *    END OF TERMS AND CONDITIONS
  *
- *    APPENDIX: How to apply the Apache License to your work.
- *
- *       To apply the Apache License to your work, attach the following
- *       boilerplate notice, with the fields enclosed by brackets "[]"
- *       replaced with your own identifying information. (Don't include
- *       the brackets!)  The text should be enclosed in the appropriate
- *       comment syntax for the file format. We also recommend that a
- *       file or class name and description of purpose be included on the
- *       same "printed page" as the copyright notice for easier
- *       identification within third-party archives.
- *
- *    Copyright [yyyy] [name of copyright owner]
+ *    Copyright 2021 Denis Thomas
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -205,7 +194,7 @@
 
 package fr.atatorus.trantor.builders
 
-import fr.atatorus.trantor.models.ITestsReport
+import fr.atatorus.trantor.models.TestsReport
 import org.thymeleaf.TemplateEngine
 import org.thymeleaf.context.IContext
 import org.thymeleaf.templatemode.TemplateMode
@@ -215,6 +204,7 @@ import java.io.FileWriter
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.*
 
 /**
@@ -235,7 +225,7 @@ class HtmlReportBuilder(private val root: String, private val application: Strin
         this.addTemplateResolver(templateResolver)
     }
 
-    override fun generateReport(testsReport: ITestsReport) {
+    override fun generateReport(testsReport: TestsReport) {
         if (existingReports.isEmpty()) {
             Files.deleteIfExists(Paths.get(root, "report", "index.html"))
         }
@@ -254,7 +244,7 @@ class HtmlReportBuilder(private val root: String, private val application: Strin
                         "title" -> testsReport.title
                         "descriptions" -> testsReport.descriptions
                         "tests" -> testsReport.tests.values.sortedBy { it.order }
-                        "now" -> LocalDateTime.now()
+                        "now" -> now()
                         else -> null
                     }
                 }
@@ -280,7 +270,7 @@ class HtmlReportBuilder(private val root: String, private val application: Strin
                 override fun getVariable(name: String): Any? {
                     return when (name) {
                         "application" -> application
-                        "now" -> LocalDateTime.now()
+                        "now" -> now()
                         "reports" -> existingReports.values.map { it.title.replace(' ', '_') }
                         else -> null
                     }
@@ -299,6 +289,11 @@ class HtmlReportBuilder(private val root: String, private val application: Strin
         return FileWriter(Files.createFile(path).toFile())
     }
 
+    private fun now(): String  {
+        return LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss"))
+    }
+
+
     companion object {
 
         const val TRANTOR_FOLDER = "trantor"
@@ -306,7 +301,7 @@ class HtmlReportBuilder(private val root: String, private val application: Strin
         /**
          * List of already generating reports. Used to regenerates full index after generates a report.
          */
-        val existingReports = hashMapOf<String, ITestsReport>()
+        val existingReports = hashMapOf<String, TestsReport>()
 
     }
 

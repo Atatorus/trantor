@@ -187,7 +187,7 @@
  *       same "printed page" as the copyright notice for easier
  *       identification within third-party archives.
  *
- *    Copyright [yyyy] [name of copyright owner]
+ *    Copyright [2021] [Denis Thomas]
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -202,74 +202,45 @@
  *    limitations under the License.
  *
  */
-package fr.atatorus.trantor.junit4
 
-import org.junit.ClassRule
-import org.junit.Rule
-import org.junit.Test
-import kotlin.test.assertEquals
+package fr.atatorus.trantor.jupiter
 
-class AddMultTest {
+import fr.atatorus.trantor.builders.HtmlReportBuilder
+import fr.atatorus.trantor.builders.ReportBuilder
+import fr.atatorus.trantor.models.ITestRecorder
+import fr.atatorus.trantor.models.TestRecorder
+import org.junit.jupiter.api.extension.AfterAllCallback
+import org.junit.jupiter.api.extension.ExtensionContext
+import org.junit.jupiter.api.extension.TestWatcher
+import java.util.*
+
+class JupiterTestReporter private constructor(val builder: ReportBuilder, val recorder: ITestRecorder) : ITestRecorder by recorder, AfterAllCallback, TestWatcher {
+
+    override fun afterAll(context: ExtensionContext) {
+        builder.generateReport(recorder.report)
+    }
+
+    override fun testDisabled(context: ExtensionContext, reason: Optional<String>) {
+        recorder.ignored(reason.orElseGet { "Test ignored" })
+    }
+
+    override fun testSuccessful(context: ExtensionContext) {
+        recorder.success()
+    }
+
+    override fun testAborted(context: ExtensionContext, cause: Throwable) {
+        recorder.aborted(cause.message ?: "Test aborted")
+    }
+
+    override fun testFailed(context: ExtensionContext, cause: Throwable) {
+        recorder.failure(cause.message ?: "Test failure")
+    }
 
     companion object {
-        @ClassRule
-        @JvmField
-        val description = ReportConfiguration.reporting(
-            "Addition and multiplication test",
-            "A sample test class for Trantor test reporting tool.",
-            "This test consists to add and multiply two integers.",
-            "For addition test, we add a example of imaginary json response."
-        )
-    }
 
-    @Rule
-    @JvmField
-    val rule = Junit4TestResultRecorder(description)
-
-    @Test
-    fun add1Test() {
-        description.currentTest(
-            "Addition test", 1,
-            "This test check that the addition of 2 numbers is correct.",
-            "First case is 2 + 2, second is 2 + 4."
-        )
-        description.nominalCase("First case", "2 + 2 = 4")
-        assertEquals(4, 2 + 2)
-        description.setResponseExample(
-            """
-            {
-                "abc": {
-                    "def": 456,
-                    "ghi": 789
-                },
-                "def": [
-                    "123", 
-                    "456"
-                ]
-            }
-        """.trimIndent()
-        )
-    }
-
-    @Test
-    fun add2Test() {
-        description.currentTest("Addition test")
-        description.alternateCase("Second case", "2 + 4 = 6")
-        assertEquals(6, 2 + 4)
-    }
-
-    @Test
-    fun mult1Test() {
-        description.currentTest("Multiplication test", 2, "As simple as first test.")
-        description.nominalCase("First case", "2 * 2 = 4")
-        assertEquals(4, 2 * 2)
-    }
-
-    @Test
-    fun mult2Test() {
-        description.currentTest("Multiplication test")
-        description.alternateCase("Second case", "2 * 4 = 8")
-        assertEquals(8, 2 * 4)
+        fun htmlJupiterReporter(root: String, application: String, title: String, vararg reportDescriptions: String): JupiterTestReporter {
+            return JupiterTestReporter(HtmlReportBuilder(root, application), TestRecorder(title, *reportDescriptions))
+        }
     }
 
 }

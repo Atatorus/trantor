@@ -176,18 +176,7 @@
  *
  *    END OF TERMS AND CONDITIONS
  *
- *    APPENDIX: How to apply the Apache License to your work.
- *
- *       To apply the Apache License to your work, attach the following
- *       boilerplate notice, with the fields enclosed by brackets "[]"
- *       replaced with your own identifying information. (Don't include
- *       the brackets!)  The text should be enclosed in the appropriate
- *       comment syntax for the file format. We also recommend that a
- *       file or class name and description of purpose be included on the
- *       same "printed page" as the copyright notice for easier
- *       identification within third-party archives.
- *
- *    Copyright [yyyy] [name of copyright owner]
+ *    Copyright 2021 Denis Thomas
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -220,10 +209,13 @@ class Test(val testName: String, var order: Int, descriptions: List<String>): Co
      */
     val descriptions: MutableList<String> = arrayListOf()
 
+    private val cases = arrayListOf<TestCase>()
+
     /**
      * List of [TestCase] of this test.
      */
-    val testCases: MutableList<TestCase> = arrayListOf()
+    val testCases: List<TestCase> = cases
+        get(): List<TestCase> = field.sorted()
 
     /**
      * An example of response.
@@ -237,21 +229,11 @@ class Test(val testName: String, var order: Int, descriptions: List<String>): Co
     constructor(testName: String, order: Int = 0, vararg lines: String) : this(testName, order, lines.asList())
 
     /**
-     * To add a new description.
-     *
-     * @param description the description to add
-     */
-    fun addDescription(description: String): Test {
-        descriptions.add(description)
-        return this
-    }
-
-    /**
-     * To add many paragraphs to description.
+     * To add many paragraphs to descriptions.
      *
      * @param descriptions The paragraphs to add.
      */
-    fun addDescriptions(vararg descriptions: String) {
+    fun descriptions(vararg descriptions: String) {
         this.descriptions.addAll(descriptions.asList())
     }
 
@@ -260,8 +242,8 @@ class Test(val testName: String, var order: Int, descriptions: List<String>): Co
      *
      * @param testCase the test case to add
      */
-    fun addTestCase(testCase: TestCase): Test {
-        testCases.add(testCase)
+    fun newTestCase(testCase: TestCase): Test {
+        cases.add(testCase)
         return this
     }
 

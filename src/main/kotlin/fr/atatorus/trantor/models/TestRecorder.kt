@@ -187,7 +187,7 @@
  *       same "printed page" as the copyright notice for easier
  *       identification within third-party archives.
  *
- *    Copyright [yyyy] [name of copyright owner]
+ *    Copyright [2021] [Denis Thomas]
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -203,75 +203,56 @@
  *
  */
 
-package fr.atatorus.trantor.junit4
+package fr.atatorus.trantor.models
 
-import org.junit.ClassRule
-import org.junit.Rule
-import org.junit.Test
-import kotlin.test.assertEquals
+/**
+ * Default implementation of [ITestRecorder]
+ */
+class TestRecorder(title: String, vararg reportDescriptions: String) : ITestRecorder {
 
-class SubDivTest {
+    override val report = TestsReport(title, reportDescriptions.asList())
 
-    companion object {
-        @ClassRule
-        @JvmField
-        val description = ReportConfiguration.reporting(
-            "Subtraction and division test",
-            "Another sample test class for Trantor test reporting tool.",
-            "This test consists to subtract and divide two integers.",
-            "For subtraction test, we add a example of imaginary json response."
-        )
+    private var currentTest: Test? = null
+    private var currentCase: TestCase? = null
+
+    override fun describeNewTest(testName: String, testOrder: Int, vararg testDescriptions: String) {
+        currentTest(testName)
+        currentTest?.also {
+            it.order = testOrder
+            it.descriptions.clear()
+            it.descriptions += testDescriptions
+        }
     }
 
-    @Rule
-    @JvmField
-    val rule = Junit4TestResultRecorder(description)
-
-    @Test
-    fun sub1Test() {
-        description.currentTest(
-            "Subtract test",
-            1,
-            "This test check that the subtraction of 2 numbers is correct.",
-            "First case is 2 - 4, second is 2 - 2."
-        )
-        description.nominalCase("First case", "2 - 4 = -2")
-        assertEquals(-2, 2 - 4)
-        description.setResponseExample(
-            """
-            {
-                "abc": {
-                    "def": 456,
-                    "ghi": 789
-                },
-                "def": [
-                    "123", 
-                    "456"
-                ]
-            }
-        """.trimIndent()
-        )
+    override fun currentTest(testName: String) {
+        currentTest = report[testName] ?: Test(testName).also {
+            report[testName] = it
+        }
     }
 
-    @Test
-    fun sub2Test() {
-        description.currentTest("Subtract test")
-        description.alternateCase("Other case", "2 - 2 = 0")
-        assertEquals(0, 2 - 2)
+    override fun testCase(caseDescription: String, expected: String, caseOrder: Int) {
+        val testCase = TestCase(caseDescription, expected, caseOrder)
+        currentTest?.newTestCase(testCase)
+        currentCase = testCase
     }
 
-    @Test
-    fun div1Test() {
-        description.currentTest("Division test", 2)
-        description.nominalCase("Nominal case", "4 / 2 = 2")
-        assertEquals(2, 4 / 2)
+    override fun setResponseExample(response: String) {
+        currentTest?.response = response
     }
 
-    @Test
-    fun div2Test() {
-        description.currentTest("Division test")
-        description.alternateCase("Other case", "2 / 2 = 2")
-        assertEquals(1, 2 / 2)
+    override fun success() {
+        currentCase?.success()
     }
 
+    override fun failure(message: String) {
+        currentCase?.failure(message)
+    }
+
+    override fun aborted(message: String) {
+        currentCase?.aborted(message)
+    }
+
+    override fun ignored(message: String) {
+        currentCase?.ignored(message)
+    }
 }

@@ -176,7 +176,18 @@
  *
  *    END OF TERMS AND CONDITIONS
  *
- *    Copyright 2021 Denis Thomas
+ *    APPENDIX: How to apply the Apache License to your work.
+ *
+ *       To apply the Apache License to your work, attach the following
+ *       boilerplate notice, with the fields enclosed by brackets "[]"
+ *       replaced with your own identifying information. (Don't include
+ *       the brackets!)  The text should be enclosed in the appropriate
+ *       comment syntax for the file format. We also recommend that a
+ *       file or class name and description of purpose be included on the
+ *       same "printed page" as the copyright notice for easier
+ *       identification within third-party archives.
+ *
+ *    Copyright [2021] [Denis Thomas]
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -191,30 +202,96 @@
  *    limitations under the License.
  *
  */
+
 package fr.atatorus.trantor.models
 
 /**
- * The report for several tests. In unit testing context, it is equivalent to a test class.
- *
- * A test report is a collection of many [Test].
- *
- * @param title the name of this test, by example 'User service test'.
- * @param descriptions List of paragraphs used to describe the test.
- *
+ * Records all informations needed for the test report.
  */
-class TestsReport(val title: String, descriptions: List<String>) {
+interface  ITestRecorder {
 
-    val descriptions: MutableList<String> = arrayListOf()
-    val tests: MutableMap<String, Test> = hashMapOf()
+    /**
+     * The test report to generate
+     */
+    val report: TestsReport
 
-    init {
-        this.descriptions += descriptions
-    }
+    /**
+     * Describe a new test, and set it as current.
+     *
+     * If there is already a test with same name, the existing will be overloaded by the new,
+     * but [Test.testCases] are preserved.
+     *
+     * @param testName the name of test to create if does not exist, [Test.testName]
+     * @param testOrder the order to sort tests in report. Overload the value of existing [Test.order].
+     * @param testDescriptions description of test. Overload the value of existing [Test.descriptions].
+     */
+    fun describeNewTest(testName: String, testOrder: Int, vararg testDescriptions: String)
 
-    operator fun get(testName: String): Test? = tests[testName]
+    /**
+     * To set the current [Test].
+     *
+     * If current test does not exist yet, it will be created with order of 0 and no descriptions.
+     *
+     * @param testName The name of test.
+     *
+     */
+    fun currentTest(testName: String)
 
-    operator fun set(testName: String, test: Test) {
-        tests[testName] = test
-    }
+    /**
+     * Register a new test case, to add to currentTest. If currentTest is null, does nothing.
+     *
+     * @param caseDescription The description of case, [TestCase.description].
+     * @param expected The expected result, [TestCase.expected].
+     * @param caseOrder Used to sort test case in report, [TestCase.order].
+     */
+    fun testCase(caseDescription: String, expected: String, caseOrder: Int)
+
+    /**
+     * Help method to create a nominal test case, with order = 0
+     */
+    fun nominalCase(description: String, expected: String) = testCase(description, expected, 0)
+
+    /**
+     * Help method to create an alternate test case, with order = 10
+     */
+    fun alternateCase(description: String, expected: String) = testCase(description, expected, 10)
+
+    /**
+     * Help method to create an error test case, with order = 20
+     */
+    fun errorCase(description: String, expected: String) = testCase(description, expected, 20)
+
+    /**
+     * In report, this response will be displayed as example. Typically, it is a JSON string.
+     *
+     * @param response example of response.
+     */
+    fun setResponseExample(response: String)
+
+    /**
+     * Mark the current test case as success. The message in result column will be 'OK'.
+     */
+    fun success()
+
+    /**
+     * Mark the current test case as failure.
+     *
+     * @param message message to display in column Result.
+     */
+    fun failure(message: String)
+
+    /**
+     * Mark the current test case as aborted.
+     *
+     * @param message message to display in column Result.
+     */
+    fun aborted(message: String)
+
+    /**
+     * Mark the current test case as ignored.
+     *
+     * @param message message to display in column Result.
+     */
+    fun ignored(message: String)
 
 }

@@ -176,7 +176,18 @@
  *
  *    END OF TERMS AND CONDITIONS
  *
- *    Copyright 2021 Denis Thomas
+ *    APPENDIX: How to apply the Apache License to your work.
+ *
+ *       To apply the Apache License to your work, attach the following
+ *       boilerplate notice, with the fields enclosed by brackets "[]"
+ *       replaced with your own identifying information. (Don't include
+ *       the brackets!)  The text should be enclosed in the appropriate
+ *       comment syntax for the file format. We also recommend that a
+ *       file or class name and description of purpose be included on the
+ *       same "printed page" as the copyright notice for easier
+ *       identification within third-party archives.
+ *
+ *    Copyright [2021] [Denis Thomas]
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -191,30 +202,57 @@
  *    limitations under the License.
  *
  */
-package fr.atatorus.trantor.models
 
-/**
- * The report for several tests. In unit testing context, it is equivalent to a test class.
- *
- * A test report is a collection of many [Test].
- *
- * @param title the name of this test, by example 'User service test'.
- * @param descriptions List of paragraphs used to describe the test.
- *
- */
-class TestsReport(val title: String, descriptions: List<String>) {
+package fr.atatorus.trantor.totest
 
-    val descriptions: MutableList<String> = arrayListOf()
-    val tests: MutableMap<String, Test> = hashMapOf()
+import java.time.LocalDate
 
-    init {
-        this.descriptions += descriptions
+class UserService {
+
+    fun createUser(email: String, firstname: String, lastname: String, dateOfBirth: LocalDate): User {
+        if (getUser(email) != null) {
+            throw RuntimeException("User exists")
+        }
+        return User(id++, email, firstname, lastname, dateOfBirth).apply {
+            users += this
+        }
     }
 
-    operator fun get(testName: String): Test? = tests[testName]
+    fun getUser(email: String) = users.filter { it.email == email }.firstOrNull()
 
-    operator fun set(testName: String, test: Test) {
-        tests[testName] = test
+    fun getUser(id: Int) = users.filter { it.id == id }.firstOrNull()
+
+    fun updateUser(
+        user: User,
+        updatedEmail: String,
+        updatedFirstname: String,
+        updatedLastname: String,
+        updatedDateOfBirth: LocalDate
+    ): User {
+        val existing = getUser(user.id) ?: throw RuntimeException("User does not exist")
+        val other = getUser(updatedEmail)
+        if (other != null && other.id != user.id) {
+            throw RuntimeException("User with $updatedEmail already exists")
+        }
+        users.remove(existing)
+        return existing.copy(
+            email = updatedEmail,
+            firstName = updatedFirstname,
+            lastName = updatedLastname,
+            dateOfBirth = updatedDateOfBirth
+        ).apply {
+            users += this
+        }
+    }
+
+    fun deleteUser(user: User) {
+        val existing = getUser(user.id) ?: throw RuntimeException("User does not exist")
+        users.remove(existing)
+    }
+
+    companion object Database {
+        var id = 0
+        val users = arrayListOf<User>()
     }
 
 }

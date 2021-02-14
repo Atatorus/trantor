@@ -176,7 +176,18 @@
  *
  *    END OF TERMS AND CONDITIONS
  *
- *    Copyright 2021 Denis Thomas
+ *    APPENDIX: How to apply the Apache License to your work.
+ *
+ *       To apply the Apache License to your work, attach the following
+ *       boilerplate notice, with the fields enclosed by brackets "[]"
+ *       replaced with your own identifying information. (Don't include
+ *       the brackets!)  The text should be enclosed in the appropriate
+ *       comment syntax for the file format. We also recommend that a
+ *       file or class name and description of purpose be included on the
+ *       same "printed page" as the copyright notice for easier
+ *       identification within third-party archives.
+ *
+ *    Copyright [2021] [Denis Thomas]
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -191,30 +202,194 @@
  *    limitations under the License.
  *
  */
-package fr.atatorus.trantor.models
 
-/**
- * The report for several tests. In unit testing context, it is equivalent to a test class.
- *
- * A test report is a collection of many [Test].
- *
- * @param title the name of this test, by example 'User service test'.
- * @param descriptions List of paragraphs used to describe the test.
- *
- */
-class TestsReport(val title: String, descriptions: List<String>) {
+package fr.atatorus.trantor.jupiter
 
-    val descriptions: MutableList<String> = arrayListOf()
-    val tests: MutableMap<String, Test> = hashMapOf()
+import fr.atatorus.trantor.ReportConfiguration
+import fr.atatorus.trantor.totest.User
+import fr.atatorus.trantor.totest.UserService
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.api.extension.RegisterExtension
+import java.time.LocalDate
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
-    init {
-        this.descriptions += descriptions
+class UserServiceTest {
+
+    private lateinit var service: UserService
+
+    companion object {
+        @JvmField
+        @RegisterExtension
+        val reporter = ReportConfiguration.jupiterReporting(
+            "UserServiceTest for JUnit Jupiter",
+            "Just a little CRUD test service"
+        )
     }
 
-    operator fun get(testName: String): Test? = tests[testName]
-
-    operator fun set(testName: String, test: Test) {
-        tests[testName] = test
+    @BeforeEach
+    fun beforeEach() {
+        cleanDatabase()
+        service = UserService()
     }
+
+    private fun cleanDatabase() {
+        UserService.users.clear()
+    }
+
+    @Test
+    fun createUserTest() {
+
+        reporter.describeNewTest("User creation test", 0, "We create just one User")
+        reporter.nominalCase("User creation", "User is saved in database")
+
+        val user = service.createUser("marcel@durat.fr", "Marcel", "Durat", LocalDate.of(1890, 7, 14))
+
+        with(user) {
+            assertNotNull(id)
+            assertEquals("marcel@durat.fr", email)
+            assertEquals("Marcel", firstName)
+            assertEquals("Durat", lastName)
+            assertEquals(LocalDate.of(1890, 7, 14), dateOfBirth)
+        }
+
+        assertEquals(user, service.getUser(user.id))
+
+        reporter.setResponseExample(user.toString())
+    }
+
+    @Test
+    fun cannotCreateTwoUsersWithSameEmailTest() {
+
+        reporter.currentTest("User creation test")
+        reporter.errorCase("Create an user with an existing email", "User must not be created and we get an exception")
+
+        service.createUser("marcel@durat.fr", "Marcel", "Durat", LocalDate.of(1890, 7, 14))
+        assertThrows<RuntimeException> {
+            service.createUser("marcel@durat.fr", "Marcel", "Durat", LocalDate.of(1890, 7, 14))
+        }
+    }
+
+    @Test
+    fun getUserByEmailTest() {
+
+        reporter.describeNewTest("Getting User by email", 1)
+        reporter.nominalCase("Get existing user by email", "The user previously created")
+
+        val user = service.createUser("marcel@durat.fr", "Marcel", "Durat", LocalDate.of(1890, 7, 14))
+
+        assertEquals(user, service.getUser(user.id))
+
+        reporter.setResponseExample(user.toString())
+    }
+
+    @Test
+    fun getUnexistingUserTest() {
+
+        reporter.currentTest("Getting User by email")
+        reporter.alternateCase("Get unexisting user", "User must be null")
+
+        assertNull(service.getUser("marcel@dirat.fr"))
+    }
+
+    @Test
+    fun updateUserTest() {
+
+        reporter.describeNewTest("Update User", 2, "We create an user, an we update it")
+        reporter.nominalCase("Update user", "User in database must be updated")
+
+        val user = service.createUser("marcel@durat.fr", "Marcel", "Durat", LocalDate.of(1890, 7, 14))
+
+        val updatedUser = service.updateUser(user, "henri@dusouris.fr", "Henri", "Dusouris", LocalDate.of(1891, 5, 31))
+
+        with(updatedUser) {
+            assertEquals("henri@dusouris.fr", email)
+            assertEquals("Henri", firstName)
+            assertEquals("Dusouris", lastName)
+            assertEquals(LocalDate.of(1891, 5, 31), dateOfBirth)
+        }
+
+        assertEquals(updatedUser, service.getUser(user.id))
+
+        reporter.setResponseExample(updatedUser.toString())
+    }
+
+    @Test
+    fun updateUserWithSameEmailTest() {
+
+        reporter.currentTest("Update User")
+        reporter.alternateCase("Update an user without change its email", "User in database must be updated")
+
+        val user = service.createUser("marcel@durat.fr", "Marcel", "Durat", LocalDate.of(1890, 7, 14))
+
+        val updatedUser = service.updateUser(user, user.email, "Henri", "Dusouris", LocalDate.of(1891, 5, 31))
+
+        with(updatedUser) {
+            assertEquals(user.email, email)
+            assertEquals("Henri", firstName)
+            assertEquals("Dusouris", lastName)
+            assertEquals(LocalDate.of(1891, 5, 31), dateOfBirth)
+        }
+
+        assertEquals(updatedUser, service.getUser(user.id))
+    }
+
+    @Test
+    fun updateUserWithExistingEmailTest() {
+
+        reporter.currentTest("Update User")
+        reporter.errorCase("Update email but an user with this email already exists", "We get an exception and user must not be updated")
+
+        service.createUser("marcel@durat.fr", "Marcel", "Durat", LocalDate.of(1890, 7, 14))
+        val user = service.createUser("henri@dusouris.fr", "Henri", "Dusouris", LocalDate.of(1891, 5, 31))
+
+        assertThrows<RuntimeException> {
+            service.updateUser(user, "marcel@durat.fr", "Henri", "Dusouris", LocalDate.of(1891, 5, 31))
+        }
+    }
+
+    @Test
+    fun updateUnexistingUserTest() {
+        reporter.currentTest("Update User")
+        reporter.errorCase("Update unexisting user", "We get an exception")
+
+        val user = User(42,"henri@dusouris.fr", "Henri", "Dusouris", LocalDate.of(1891, 5, 31))
+
+        assertThrows<RuntimeException> {
+            service.updateUser(user, "marcel@durat.fr", "Henri", "Dusouris", LocalDate.of(1891, 5, 31))
+        }
+    }
+
+    @Test
+    fun deleteUserTest() {
+
+        reporter.describeNewTest("Delete user", 3, "We create an user, and next we delete it")
+        reporter.nominalCase("User deletion", "User must be deleted from database")
+
+        val user = service.createUser("marcel@durat.fr", "Marcel", "Durat", LocalDate.of(1890, 7, 14))
+
+        service.deleteUser(user)
+
+        assertNull(service.getUser(user.id))
+    }
+
+    @Test
+    fun cannotDeleteUnexistingUserTest() {
+
+        reporter.currentTest("Delete user")
+        reporter.errorCase("Delete unexisting user", "We get an exception")
+
+        val user = service.createUser("marcel@durat.fr", "Marcel", "Durat", LocalDate.of(1890, 7, 14))
+
+        service.deleteUser(user)
+
+        assertThrows<RuntimeException> {
+            service.deleteUser(user)
+        }
+    }
+
 
 }

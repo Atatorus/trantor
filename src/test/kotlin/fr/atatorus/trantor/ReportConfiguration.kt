@@ -176,7 +176,18 @@
  *
  *    END OF TERMS AND CONDITIONS
  *
- *    Copyright 2021 Denis Thomas
+ *    APPENDIX: How to apply the Apache License to your work.
+ *
+ *       To apply the Apache License to your work, attach the following
+ *       boilerplate notice, with the fields enclosed by brackets "[]"
+ *       replaced with your own identifying information. (Don't include
+ *       the brackets!)  The text should be enclosed in the appropriate
+ *       comment syntax for the file format. We also recommend that a
+ *       file or class name and description of purpose be included on the
+ *       same "printed page" as the copyright notice for easier
+ *       identification within third-party archives.
+ *
+ *    Copyright [2021] [Denis Thomas]
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -191,30 +202,24 @@
  *    limitations under the License.
  *
  */
-package fr.atatorus.trantor.models
+package fr.atatorus.trantor
 
-/**
- * The report for several tests. In unit testing context, it is equivalent to a test class.
- *
- * A test report is a collection of many [Test].
- *
- * @param title the name of this test, by example 'User service test'.
- * @param descriptions List of paragraphs used to describe the test.
- *
- */
-class TestsReport(val title: String, descriptions: List<String>) {
+import fr.atatorus.trantor.junit4.Junit4TestsReporter
+import fr.atatorus.trantor.jupiter.JupiterTestReporter
 
-    val descriptions: MutableList<String> = arrayListOf()
-    val tests: MutableMap<String, Test> = hashMapOf()
+object ReportConfiguration {
 
-    init {
-        this.descriptions += descriptions
+    const val root = "target"
+    const val applicationName = "Trantor demo application"
+
+    fun junit4Reporting(title: String, vararg descriptions: String): Junit4TestsReporter {
+        return Junit4TestsReporter.htmlReporter(root, applicationName, title, *descriptions)
     }
 
-    operator fun get(testName: String): Test? = tests[testName]
-
-    operator fun set(testName: String, test: Test) {
-        tests[testName] = test
+    fun jupiterReporting(title: String, vararg descriptions: String): JupiterTestReporter {
+        return JupiterTestReporter.htmlJupiterReporter(root, applicationName, title, *descriptions)
     }
+
 
 }
+

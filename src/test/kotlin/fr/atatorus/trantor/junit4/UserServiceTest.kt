@@ -187,7 +187,7 @@
  *       same "printed page" as the copyright notice for easier
  *       identification within third-party archives.
  *
- *    Copyright [yyyy] [name of copyright owner]
+ *    Copyright [2021] [Denis Thomas]
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -202,99 +202,190 @@
  *    limitations under the License.
  *
  */
-package fr.atatorus.trantor.models
 
-/**
- * Interface for a test report, for several tests.
- *
- * In unit testing, a [ITestsReport] is equivalent to a test class, a [Test] corresponds to many methods,
- * and [TestCase] to a method.
- */
-interface ITestsReport {
+package fr.atatorus.trantor.junit4
 
-    /**
-     * Title of report
-     */
-    val title: String
-    /**
-     * The description of report
-     */
-    val descriptions: MutableList<String>
+import fr.atatorus.trantor.ReportConfiguration
+import fr.atatorus.trantor.totest.User
+import fr.atatorus.trantor.totest.UserService
+import org.junit.Before
+import org.junit.ClassRule
+import org.junit.Rule
+import org.junit.Test
+import java.time.LocalDate
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
-    /**
-     * List of [Test]
-     */
-    val tests: MutableMap<String, Test>
+class UserServiceTest {
 
+    private lateinit var service: UserService
 
-    /**
-     * To set the current test.
-     *
-     * If there is already a test with same name, the existing will be overloaded by the new,
-     * but [Test.testCases] are preserved.
-     *
-     * @param testName the name of test to create if does not exist, [Test.testName]
-     * @param testOrder the order to sort tests in report. Overload the value of existing [Test.order].
-     * @param testDescriptions description of test. Overload the value of existing [Test.descriptions].
-     */
-    fun currentTest(testName: String, testOrder: Int, vararg testDescriptions: String)
+    companion object {
+        @JvmField
+        @ClassRule
+        val reporter = ReportConfiguration.junit4Reporting(
+            "UserServiceTest for JUnit4",
+            "Just a little CRUD test service"
+        )
+    }
 
-    /**
-     * To set the current [Test].
-     *
-     * If current test does not exist yet, it will be created with order of 0 and no descriptions.
-     *
-     * @param testName The name of test.
-     *
-     */
-    fun currentTest(testName: String)
+    @JvmField
+    @Rule
+    val rule = Junit4TestResultRecorder(reporter)
 
-    /**
-     * In report, this response will be displayed as example. Typically, it is a JSON string.
-     *
-     * @param response example of response.
-     */
-    fun setResponseExample(response: String?)
+    @Before
+    fun before() {
+        cleanDatabase()
+        service = UserService()
+    }
 
-    /**
-     * Mark the current test case as success. The message in result column will be 'OK'.
-     */
-    fun testSuccess()
+    private fun cleanDatabase() {
+        UserService.users.clear()
+    }
 
-    /**
-     * Mark the current test case as failure.
-     *
-     * @param message message to display in column Result.
-     */
-    fun testFailure(message: String)
+    @Test
+    fun createUserTest() {
 
-    /**
-     * Register a new test case, to add to currentTest. If currentTest is null, does nothing.
-     *
-     * @param caseDescription The description of case, [TestCase.description].
-     * @param expected The expected result, [TestCase.expected].
-     * @param caseOrder Used to sort test case in report, [TestCase.order].
-     */
-    fun newTestCase(caseDescription: String, expected: String, caseOrder: Int)
+        reporter.describeNewTest("User creation test", 0, "We create just one User")
+        reporter.nominalCase("User creation", "User is saved in database")
 
-    /**
-     * Register a test as nominal case, ie with [TestCase.order] set to 0.
-     * @param caseDescription The description of case, [TestCase.description]
-     * @param expected The expected result, , [TestCase.expected]
-     */
-    fun nominalCase(caseDescription: String, expected: String) = newTestCase(caseDescription, expected, 0)
+        val user = service.createUser("marcel@durat.fr", "Marcel", "Durat", LocalDate.of(1890, 7, 14))
 
-    /**
-     * Register a test as alternate case, ie with [TestCase.order] set to 10.
-     * @param caseDescription The description of case, [TestCase.description]
-     * @param expected The expected result, [TestCase.expected]
-     */
-    fun alternateCase(caseDescription: String, expected: String) = newTestCase(caseDescription, expected, 10)
+        with(user) {
+            assertNotNull(id)
+            assertEquals("marcel@durat.fr", email)
+            assertEquals("Marcel", firstName)
+            assertEquals("Durat", lastName)
+            assertEquals(LocalDate.of(1890, 7, 14), dateOfBirth)
+        }
 
-    /**
-     * Register a test as error case, ie with [TestCase.order] set to 20.
-     * @param caseDescription The description of case, [TestCase.description]
-     * @param expected The expected result, [TestCase.expected]
-     */
-    fun errorCase(caseDescription: String, expected: String) = newTestCase(caseDescription, expected, 20)
+        assertEquals(user, service.getUser(user.id))
+
+        reporter.setResponseExample(user.toString())
+    }
+
+    @Test(expected = RuntimeException::class)
+    fun cannotCreateTwoUsersWithSameEmailTest() {
+
+        reporter.currentTest("User creation test")
+        reporter.errorCase("Create an user with an existing email", "User must not be created and we get an exception")
+
+        service.createUser("marcel@durat.fr", "Marcel", "Durat", LocalDate.of(1890, 7, 14))
+
+        service.createUser("marcel@durat.fr", "Marcel", "Durat", LocalDate.of(1890, 7, 14))
+    }
+
+    @Test
+    fun getUserByEmailTest() {
+
+        reporter.describeNewTest("Getting User by email", 1)
+        reporter.nominalCase("Get existing user by email", "The user previously created")
+
+        val user = service.createUser("marcel@durat.fr", "Marcel", "Durat", LocalDate.of(1890, 7, 14))
+
+        assertEquals(user, service.getUser(user.id))
+
+        reporter.setResponseExample(user.toString())
+    }
+
+    @Test
+    fun getUnexistingUserTest() {
+
+        reporter.currentTest("Getting User by email")
+        reporter.alternateCase("Get unexisting user", "User must be null")
+
+        assertNull(service.getUser("marcel@dirat.fr"))
+    }
+
+    @Test
+    fun updateUserTest() {
+
+        reporter.describeNewTest("Update User", 2, "We create an user, an we update it")
+        reporter.nominalCase("Update user", "User in database must be updated")
+
+        val user = service.createUser("marcel@durat.fr", "Marcel", "Durat", LocalDate.of(1890, 7, 14))
+
+        val updatedUser = service.updateUser(user, "henri@dusouris.fr", "Henri", "Dusouris", LocalDate.of(1891, 5, 31))
+
+        with(updatedUser) {
+            assertEquals("henri@dusouris.fr", email)
+            assertEquals("Henri", firstName)
+            assertEquals("Dusouris", lastName)
+            assertEquals(LocalDate.of(1891, 5, 31), dateOfBirth)
+        }
+
+        assertEquals(updatedUser, service.getUser(user.id))
+
+        reporter.setResponseExample(updatedUser.toString())
+    }
+
+    @Test
+    fun updateUserWithSameEmailTest() {
+
+        reporter.currentTest("Update User")
+        reporter.alternateCase("Update an user without change its email", "User in database must be updated")
+
+        val user = service.createUser("marcel@durat.fr", "Marcel", "Durat", LocalDate.of(1890, 7, 14))
+
+        val updatedUser = service.updateUser(user, user.email, "Henri", "Dusouris", LocalDate.of(1891, 5, 31))
+
+        with(updatedUser) {
+            assertEquals(user.email, email)
+            assertEquals("Henri", firstName)
+            assertEquals("Dusouris", lastName)
+            assertEquals(LocalDate.of(1891, 5, 31), dateOfBirth)
+        }
+
+        assertEquals(updatedUser, service.getUser(user.id))
+    }
+
+    @Test(expected = RuntimeException::class)
+    fun updateUserWithExistingEmailTest() {
+
+        reporter.currentTest("Update User")
+        reporter.errorCase("Update email but an user with this email already exists", "We get an exception and user must not be updated")
+
+        service.createUser("marcel@durat.fr", "Marcel", "Durat", LocalDate.of(1890, 7, 14))
+        val user = service.createUser("henri@dusouris.fr", "Henri", "Dusouris", LocalDate.of(1891, 5, 31))
+
+        service.updateUser(user, "marcel@durat.fr", "Henri", "Dusouris", LocalDate.of(1891, 5, 31))
+    }
+
+    @Test(expected = RuntimeException::class)
+    fun updateUnexistingUserTest() {
+        reporter.currentTest("Update User")
+        reporter.errorCase("Update unexisting user", "We get an exception")
+
+        val user = User(42,"henri@dusouris.fr", "Henri", "Dusouris", LocalDate.of(1891, 5, 31))
+
+        service.updateUser(user, "marcel@durat.fr", "Henri", "Dusouris", LocalDate.of(1891, 5, 31))
+    }
+
+    @Test
+    fun deleteUserTest() {
+
+        reporter.describeNewTest("Delete user", 3, "We create an user, and next we delete it")
+        reporter.nominalCase("User deletion", "User must be deleted from database")
+
+        val user = service.createUser("marcel@durat.fr", "Marcel", "Durat", LocalDate.of(1890, 7, 14))
+
+        service.deleteUser(user)
+
+        assertNull(service.getUser(user.id))
+    }
+
+    @Test(expected = RuntimeException::class)
+    fun cannotDeleteUnexistingUserTest() {
+
+        reporter.currentTest("Delete user")
+        reporter.errorCase("Delete unexisting user", "We get an exception")
+
+        val user = service.createUser("marcel@durat.fr", "Marcel", "Durat", LocalDate.of(1890, 7, 14))
+
+        service.deleteUser(user)
+        service.deleteUser(user)
+
+    }
+
 }

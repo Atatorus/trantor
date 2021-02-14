@@ -187,7 +187,7 @@
  *       same "printed page" as the copyright notice for easier
  *       identification within third-party archives.
  *
- *    Copyright [yyyy] [name of copyright owner]
+ *    Copyright [2021] [Denis Thomas]
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -202,16 +202,35 @@
  *    limitations under the License.
  *
  */
-package fr.atatorus.trantor.junit4
 
-import fr.atatorus.trantor.junit4.Junit4TestsReporter
+package fr.atatorus.trantor.totest
 
-object ReportConfiguration {
+import java.time.LocalDateTime
 
-    fun reporting(title: String, vararg lines: String): Junit4TestsReporter {
-        return Junit4TestsReporter.htmlReporter("target", "My Application", title, *lines)
+class BorrowService {
+
+    fun borrowBook(user: User, book: Book) {
+        if (borrows.any { it.user == user }) {
+            throw RuntimeException("An user can borrow only one book")
+        }
+        borrows += Borrow(id++, user, book, LocalDateTime.now())
     }
 
+    fun findBorrowedBook(user: User) = borrows.find { it.user == user }?.book
+
+    fun findBorrower(book: Book) = borrows.find { it.book.title == book.title && it.book.author == book.author }?.user
+
+    fun returnBook(user: User) {
+        if (findBorrowedBook(user) == null) {
+            throw RuntimeException("User has not borrowed book")
+        }
+        borrows.removeIf { it.user == user }
+    }
+
+    companion object Database {
+        var id = 0
+
+        val borrows = arrayListOf<Borrow>()
+    }
 
 }
-

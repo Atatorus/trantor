@@ -206,10 +206,7 @@
 package fr.atatorus.trantor.totest
 
 import java.time.LocalDate
-import java.time.LocalDateTime
 
 data class User(val id: Int, val email: String, val firstName: String, val lastName: String, val dateOfBirth: LocalDate)
 
 data class Book(val id: Int, val author: String, val title: String)
-
-data class Borrow(val id: Int, val user: User, val book: Book, val date: LocalDateTime)

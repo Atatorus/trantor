@@ -194,7 +194,10 @@
 
 package fr.atatorus.trantor.builders
 
+import fr.atatorus.trantor.builders.HtmlReportBuilder.applicationName
+import fr.atatorus.trantor.builders.HtmlReportBuilder.rootDirectory
 import fr.atatorus.trantor.models.TestsReport
+import org.slf4j.LoggerFactory
 import org.thymeleaf.TemplateEngine
 import org.thymeleaf.context.IContext
 import org.thymeleaf.templatemode.TemplateMode
@@ -208,14 +211,24 @@ import java.time.format.DateTimeFormatter
 import java.util.*
 
 /**
- * Html report builder
+ * Html report builder.
  *
- * @property root Root folder of documentation. By example, can be `target` for maven projects.
- * @property application The name of application that appears as title in `index.html` file.
- * @constructor Create Html report builder
+ * After initialization, we create a jvm shutdown hook to generate the index of reports after all tests.
+ *
+ * @property rootDirectory Root folder of documentation. By example, can be `target` for maven projects. Default is ".".
+ * @property applicationName The name of application that appears as title in `index.html` file. Default is "Trantor".
+ *
  */
-class HtmlReportBuilder(private val root: String, private val application: String) : ReportBuilder {
+object HtmlReportBuilder : ReportBuilder {
 
+    private const val TRANTOR_FOLDER = "trantor"
+
+    var rootDirectory = "."
+    var applicationName = "Trantor"
+
+    private val logger = LoggerFactory.getLogger(HtmlReportBuilder::class.java)
+
+    private val generatedReports = arrayListOf<TestsReport>()
     private val templateResolver: ITemplateResolver = ClassLoaderTemplateResolver().apply {
         prefix = "/template"
         suffix = ".html"
@@ -225,11 +238,21 @@ class HtmlReportBuilder(private val root: String, private val application: Strin
         this.addTemplateResolver(templateResolver)
     }
 
+    init {
+        Paths.get(rootDirectory, TRANTOR_FOLDER).toFile().deleteRecursively()
+        Files.createDirectories(Paths.get(rootDirectory, TRANTOR_FOLDER))
+        Runtime.getRuntime().addShutdownHook(Thread {
+            try {
+                updateIndex()
+            } catch (e: Exception) {
+                logger.error("Error updating index", e)
+            }
+        })
+    }
+
     override fun generateReport(testsReport: TestsReport) {
-        if (existingReports.isEmpty()) {
-            Files.deleteIfExists(Paths.get(root, "report", "index.html"))
-        }
-        getWriter("${testsReport.title.replace(' ', '_')}.html").use { writer ->
+
+        getWriter("${testsReport.title.replace(Regex("[^a-zA-Z0-9]"), "")}.html").use { writer ->
             val ctx: IContext = object : IContext {
                 override fun getLocale() = Locale.getDefault()
 
@@ -240,7 +263,7 @@ class HtmlReportBuilder(private val root: String, private val application: Strin
 
                 override fun getVariable(name: String): Any? {
                     return when (name) {
-                        "application" -> application
+                        "application" -> applicationName
                         "title" -> testsReport.title
                         "descriptions" -> testsReport.descriptions
                         "tests" -> testsReport.tests.values.sortedBy { it.order }
@@ -251,9 +274,8 @@ class HtmlReportBuilder(private val root: String, private val application: Strin
             }
 
             templateEngine.process("/report", ctx, writer)
-            existingReports[testsReport.title.replace(' ', '_')] = testsReport
+            generatedReports += testsReport
         }
-        updateIndex()
     }
 
     private fun updateIndex() {
@@ -269,9 +291,9 @@ class HtmlReportBuilder(private val root: String, private val application: Strin
 
                 override fun getVariable(name: String): Any? {
                     return when (name) {
-                        "application" -> application
+                        "application" -> applicationName
                         "now" -> now()
-                        "reports" -> existingReports.values.map { it.title.replace(' ', '_') }
+                        "reports" -> generatedReports
                         else -> null
                     }
                 }
@@ -281,28 +303,12 @@ class HtmlReportBuilder(private val root: String, private val application: Strin
     }
 
     private fun getWriter(fileName: String): FileWriter {
-        Files.createDirectories(Paths.get(root, TRANTOR_FOLDER))
-        val path = Paths.get(root, TRANTOR_FOLDER, fileName)
-        if (Files.exists(path)) {
-            Files.delete(path)
-        }
+        val path = Paths.get(rootDirectory, TRANTOR_FOLDER, fileName)
         return FileWriter(Files.createFile(path).toFile())
     }
 
-    private fun now(): String  {
+    private fun now(): String {
         return LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss"))
-    }
-
-
-    companion object {
-
-        const val TRANTOR_FOLDER = "trantor"
-
-        /**
-         * List of already generating reports. Used to regenerates full index after generates a report.
-         */
-        val existingReports = hashMapOf<String, TestsReport>()
-
     }
 
 }

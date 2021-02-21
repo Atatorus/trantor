@@ -262,13 +262,6 @@ interface  ITestRecorder {
     fun errorCase(description: String, expected: String) = testCase(description, expected, 20)
 
     /**
-     * In report, this response will be displayed as example. Typically, it is a JSON string.
-     *
-     * @param response example of response.
-     */
-    fun setResponseExample(response: String)
-
-    /**
      * Mark the current test case as success. The message in result column will be 'OK'.
      */
     fun success()

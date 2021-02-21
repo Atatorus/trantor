@@ -193,6 +193,7 @@
  */
 package fr.atatorus.trantor.junit4
 
+import fr.atatorus.trantor.models.ITestRecorder
 import org.junit.rules.TestWatcher
 import org.junit.runner.Description
 import fr.atatorus.trantor.models.TestCase
@@ -202,7 +203,7 @@ import fr.atatorus.trantor.models.TestCase
  *
  * @param reporter the Junit4 test reporter.
  */
-class Junit4TestResultRecorder(private val reporter: Junit4TestsReporter) : TestWatcher() {
+class Junit4TestResultRecorder(private val reporter: ITestRecorder) : TestWatcher() {
 
     override fun succeeded(description: Description) {
         reporter.success()

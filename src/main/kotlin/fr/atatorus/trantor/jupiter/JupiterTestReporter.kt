@@ -214,7 +214,8 @@ import org.junit.jupiter.api.extension.ExtensionContext
 import org.junit.jupiter.api.extension.TestWatcher
 import java.util.*
 
-class JupiterTestReporter private constructor(val builder: ReportBuilder, val recorder: ITestRecorder) : ITestRecorder by recorder, AfterAllCallback, TestWatcher {
+class JupiterTestReporter private constructor(val builder: ReportBuilder, val recorder: ITestRecorder) :
+    ITestRecorder by recorder, AfterAllCallback, TestWatcher {
 
     override fun afterAll(context: ExtensionContext) {
         builder.generateReport(recorder.report)
@@ -238,9 +239,13 @@ class JupiterTestReporter private constructor(val builder: ReportBuilder, val re
 
     companion object {
 
-        fun htmlJupiterReporter(root: String, application: String, title: String, vararg reportDescriptions: String): JupiterTestReporter {
-            return JupiterTestReporter(HtmlReportBuilder(root, application), TestRecorder(title, *reportDescriptions))
-        }
+        fun htmlJupiterReporter(root: String, application: String, title: String, vararg reportDescriptions: String) =
+            JupiterTestReporter(
+                HtmlReportBuilder.apply {
+                    rootDirectory = root
+                    applicationName = application
+                },
+                TestRecorder(title, *reportDescriptions)
+            )
     }
-
 }

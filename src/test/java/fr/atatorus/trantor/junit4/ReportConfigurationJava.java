@@ -203,34 +203,15 @@
  *
  */
 
-package fr.atatorus.trantor.totest
+package fr.atatorus.trantor.junit4;
 
-import java.time.LocalDateTime
+public class ReportConfigurationJava {
 
-class BorrowService {
+    private static final String ROOT = "target";
+    private static final String APPLICATION_NAME = "Trantor demo application";
 
-    fun borrowBook(user: User, book: Book) {
-        if (borrows.any { it.user == user }) {
-            throw RuntimeException("An user can borrow only one book")
-        }
-        borrows += Borrow(id++, user, book, LocalDateTime.now())
-    }
-
-    fun findBorrowedBook(user: User) = borrows.find { it.user == user }?.book
-
-    fun findBorrower(book: Book) = borrows.find { it.book.title == book.title && it.book.author == book.author }?.user
-
-    fun returnBook(user: User) {
-        if (findBorrowedBook(user) == null) {
-            throw RuntimeException("User has not borrowed book")
-        }
-        borrows.removeIf { it.user == user }
-    }
-
-    companion object Database {
-        var id = 0
-
-        val borrows = arrayListOf<Borrow>()
+    public static Junit4TestsReporter junit4HtmlReporter(String title, String... descriptions) {
+        return Junit4TestsReporter.htmlReporter(ROOT, APPLICATION_NAME, title, descriptions);
     }
 
 }

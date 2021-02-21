@@ -233,7 +233,7 @@ class BookServiceTest {
 
     @JvmField
     @Rule
-    val rule = Junit4TestResultRecorder(reporter)
+    val watcher = Junit4TestResultRecorder(reporter)
 
     @Before
     fun before() {
@@ -261,7 +261,6 @@ class BookServiceTest {
 
         assertEquals(book, service.getBook(book.id))
 
-        reporter.setResponseExample(book.toString())
     }
 
     @Test
@@ -291,7 +290,6 @@ class BookServiceTest {
         assertNotNull(books.filter { it.title == "Souvenir d'un as" })
         assertNotNull(books.filter { it.title == "Comment je me suis crashé" })
 
-        reporter.setResponseExample(books.toString())
     }
 
     @Test
@@ -314,13 +312,12 @@ class BookServiceTest {
         val updated = service.updateBook(book, "Henri Durat", "Comment je me suis crashé")
 
         with(updated) {
-            assertEquals("Comment je me suis crashé", updated.title)
-            assertEquals("Henri Durat", updated.author)
+            assertEquals("Comment je me suis crashé", title)
+            assertEquals("Henri Durat", author)
         }
 
         assertEquals(updated, service.getBook(book.id))
 
-        reporter.setResponseExample(updated.toString())
     }
 
     @Test(expected = RuntimeException::class)
@@ -351,9 +348,6 @@ class BookServiceTest {
 
         reporter.currentTest("Delete book")
         reporter.errorCase("Delete unexisting book", "We get an exception")
-
-        reporter.describeNewTest("Delete book", 3, "We create a book, and next we delete it")
-        reporter.nominalCase("Book deletion", "Book must be deleted from database")
 
         val book = service.createBook("Marcel Durat", "Souvenir d'un as")
 

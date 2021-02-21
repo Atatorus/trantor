@@ -203,44 +203,145 @@
  *
  */
 
-package fr.atatorus.trantor.jupiter
+package fr.atatorus.trantor.junit4;
 
-import fr.atatorus.trantor.ReportConfiguration
-import fr.atatorus.trantor.totest.BorrowService
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.RegisterExtension
-import kotlin.test.fail
+import fr.atatorus.trantor.totest.Book;
+import fr.atatorus.trantor.totest.BookService;
+import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TestWatcher;
 
-class BorrowServiceTest {
+import java.util.List;
 
-    private lateinit var service: BorrowService
+import static org.junit.Assert.*;
 
-    companion object {
-        @JvmField
-        @RegisterExtension
-        val reporter = ReportConfiguration.jupiterReporting(
-            "BorrowService test for JUnit Jupiter",
-            "Just a litle service"
-        )
+public class BookServiceJavaTest {
+
+    private BookService service;
+
+    @ClassRule
+    public static Junit4TestsReporter reporter = ReportConfigurationJava.junit4HtmlReporter(
+            "BookServiceTest for JUnit4, java code",
+            "Just a little CRUD test service");
+
+    @Rule
+    public TestWatcher watcher = new Junit4TestResultRecorder(reporter);
+
+    @Before
+    public void before() {
+        cleanDatabase();
+        service = new BookService();
     }
 
-    @BeforeEach
-    fun beforeEach() {
-        cleanDatabase()
-        service = BorrowService()
-    }
-
-    fun cleanDatabase() {
-        BorrowService.borrows.clear()
+    private void cleanDatabase() {
+        BookService.books.clear();
     }
 
     @Test
-    fun userCanBorrowABookTest() {
-        reporter.describeNewTest("user borrowing a book", 1, "On user take a book")
-        reporter.nominalCase("An user borrow a book", "The book is set as borrowed by the user")
-        TODO()
+    public void createBookTest() {
+
+        reporter.describeNewTest("Book creation test", 0, "We create just one Book");
+        reporter.nominalCase("Book creation", "Book is saved in database");
+
+        Book book = service.createBook("Marcel Durat", "Souvenir d'un as");
+
+        assertEquals("Souvenir d'un as", book.getTitle());
+        assertEquals("Marcel Durat", book.getAuthor());
+
+        assertEquals(book, service.getBook(book.getId()));
     }
 
+    @Test
+    public void canCreateTwoBooksWithSameTitleAndAuthorTest() {
+
+        reporter.currentTest("Book creation test");
+        reporter.alternateCase("Book creation with existing title and author", "New book is saved in database");
+
+        Book book1 = service.createBook("Marcel Durat", "Souvenir d'un as");
+        Book book2 = service.createBook("Marcel Durat", "Souvenir d'un as");
+
+        assertNotEquals(book1.getId(), book2.getId());
+    }
+
+    @Test
+    public void getBookByAuthorTest() {
+
+        reporter.describeNewTest("Getting book by author", 1);
+        reporter.nominalCase("Get all books for an author", "The books of this author");
+
+        service.createBook("Marcel Durat", "Souvenir d'un as");
+        service.createBook("Marcel Durat", "Comment je me suis crashé");
+
+        List<Book> books = service.getBooks("Marcel Durat");
+
+        assertEquals(2, books.size());
+        assertTrue(books.stream().anyMatch(book -> book.getTitle().equals("Souvenir d'un as")));
+        assertTrue(books.stream().anyMatch(book -> book.getTitle().equals("Comment je me suis crashé")));
+
+    }
+
+    @Test
+    public void getBooksForUnexistingAuthorTest() {
+
+        reporter.currentTest("Getting book by author");
+        reporter.alternateCase("No books for this author", "Get an empty list");
+
+        assertTrue(service.getBooks("Marcel Durat").isEmpty());
+    }
+
+    @Test
+    public void updateBookTest() {
+
+        reporter.describeNewTest("Update Book", 2, "We create a book, an we change author and title");
+        reporter.nominalCase("Update book", "Book in database must be updated");
+
+        Book book = service.createBook("Marcel Durat", "Souvenir d'un as");
+
+        Book updated = service.updateBook(book, "Henri Durat", "Comment je me suis crashé");
+
+        assertEquals("Comment je me suis crashé", updated.getTitle());
+        assertEquals("Henri Durat", updated.getAuthor());
+
+        assertEquals(updated, service.getBook(book.getId()));
+
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void updateUnexistingBookTest() {
+        reporter.currentTest("Update Book");
+        reporter.errorCase("Update unexisting book", "We get an exception");
+
+        Book book = new Book(42, "Marcel Durat", "Souvenir d'un as");
+
+        service.updateBook(book, "Henri Durat", "Comment je me suis crashé");
+    }
+
+    @Test
+    public void deleteBookTest() {
+
+        reporter.describeNewTest("Delete book", 3, "We create a book, and next we delete it");
+        reporter.nominalCase("Book deletion", "Book must be deleted from database");
+
+        Book book = service.createBook("Marcel Durat", "Souvenir d'un as");
+
+        service.deleteBook(book);
+
+        assertNull(service.getBook(book.getId()));
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void cannotDeleteUnexistingBookTest() {
+
+        reporter.currentTest("Delete book");
+        reporter.errorCase("Delete unexisting book", "We get an exception");
+
+        Book book = service.createBook("Marcel Durat", "Souvenir d'un as");
+
+        service.deleteBook(book);
+
+        service.deleteBook(book);
+    }
 
 }

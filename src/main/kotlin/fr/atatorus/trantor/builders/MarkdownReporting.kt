@@ -200,46 +200,10 @@ import fr.atatorus.trantor.models.TestsReport
  *
  * TODO
  */
-class MarkdownReporting : ReportBuilder {
+object MarkdownReporting : ReportBuilder {
 
     override fun generateReport(testsReport: TestsReport) {
         TODO()
-//        val lines: MutableList<String> = ArrayList()
-//        // testClass title & description
-//        lines += "## $title\n"
-//        descriptionLines.forEach {
-//            lines += "$it\n"
-//        }
-//        lines += "\n"
-//        // tests description
-//        testDescriptions.values.sortedBy { it.order }.forEach { testDescription ->
-//            lines += "### ${testDescription.testName}\n"
-//            lines += "| Test case | Expected | Result |\n"
-//            lines += "|---|---|:---:|\n"
-//            testDescription.testCases.sortedBy { it.order }.forEach { testCase ->
-//                lines += "| ${testCase.description} | ${testCase.expected} | __${testCase.result}__ |\n"
-//            }
-//            lines += "\n"
-//            if (testDescription.response.isNotBlank()) {
-//                lines += "**Response example** :\n"
-//                lines += "```\n"
-//                lines += "${testDescription.response}\n"
-//                lines += "```\n"
-//            }
-//        }
-//        try {
-//            val reportPath = Paths.get("./$title.md")
-//            if (Files.exists(reportPath)) {
-//                Files.delete(reportPath)
-//            }
-//            val reportFile = Files.createFile(reportPath).toFile()
-//            BufferedWriter(FileWriter(reportFile)).use { writer ->
-//                for (line in lines) {
-//                    writer.write(line)
-//                }
-//            }
-//        } catch (e: Exception) {
-//        }
     }
 
 }

@@ -212,6 +212,7 @@ object ReportConfiguration {
     const val root = "target"
     const val applicationName = "Trantor demo application"
 
+    @JvmStatic
     fun junit4Reporting(title: String, vararg descriptions: String): Junit4TestsReporter {
         return Junit4TestsReporter.htmlReporter(root, applicationName, title, *descriptions)
     }

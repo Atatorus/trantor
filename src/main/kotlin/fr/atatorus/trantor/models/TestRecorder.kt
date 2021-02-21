@@ -236,10 +236,6 @@ class TestRecorder(title: String, vararg reportDescriptions: String) : ITestReco
         currentCase = testCase
     }
 
-    override fun setResponseExample(response: String) {
-        currentTest?.response = response
-    }
-
     override fun success() {
         currentCase?.success()
     }

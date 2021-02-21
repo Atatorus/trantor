@@ -258,7 +258,6 @@ class UserServiceTest {
 
         assertEquals(user, service.getUser(user.id))
 
-        reporter.setResponseExample(user.toString())
     }
 
     @Test
@@ -283,7 +282,6 @@ class UserServiceTest {
 
         assertEquals(user, service.getUser(user.id))
 
-        reporter.setResponseExample(user.toString())
     }
 
     @Test
@@ -314,7 +312,6 @@ class UserServiceTest {
 
         assertEquals(updatedUser, service.getUser(user.id))
 
-        reporter.setResponseExample(updatedUser.toString())
     }
 
     @Test

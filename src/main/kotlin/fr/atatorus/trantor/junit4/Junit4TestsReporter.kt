@@ -226,7 +226,10 @@ class Junit4TestsReporter private constructor(val reportBuilder: ReportBuilder, 
 
         @JvmStatic
         fun htmlReporter(root: String, application: String, title: String, vararg reportDescriptions: String) =
-            Junit4TestsReporter(HtmlReportBuilder(root, application), TestRecorder(title, *reportDescriptions))
+            Junit4TestsReporter(HtmlReportBuilder.apply {
+                rootDirectory = root
+                applicationName = application
+            }, TestRecorder(title, *reportDescriptions))
     }
 
 }

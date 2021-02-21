@@ -232,7 +232,7 @@ class UserServiceTest {
 
     @JvmField
     @Rule
-    val rule = Junit4TestResultRecorder(reporter)
+    val watcher = Junit4TestResultRecorder(reporter)
 
     @Before
     fun before() {
@@ -262,7 +262,6 @@ class UserServiceTest {
 
         assertEquals(user, service.getUser(user.id))
 
-        reporter.setResponseExample(user.toString())
     }
 
     @Test(expected = RuntimeException::class)
@@ -286,7 +285,6 @@ class UserServiceTest {
 
         assertEquals(user, service.getUser(user.id))
 
-        reporter.setResponseExample(user.toString())
     }
 
     @Test
@@ -317,7 +315,6 @@ class UserServiceTest {
 
         assertEquals(updatedUser, service.getUser(user.id))
 
-        reporter.setResponseExample(updatedUser.toString())
     }
 
     @Test
@@ -344,7 +341,10 @@ class UserServiceTest {
     fun updateUserWithExistingEmailTest() {
 
         reporter.currentTest("Update User")
-        reporter.errorCase("Update email but an user with this email already exists", "We get an exception and user must not be updated")
+        reporter.errorCase(
+            "Update email but an user with this email already exists",
+            "We get an exception and user must not be updated"
+        )
 
         service.createUser("marcel@durat.fr", "Marcel", "Durat", LocalDate.of(1890, 7, 14))
         val user = service.createUser("henri@dusouris.fr", "Henri", "Dusouris", LocalDate.of(1891, 5, 31))
@@ -357,7 +357,7 @@ class UserServiceTest {
         reporter.currentTest("Update User")
         reporter.errorCase("Update unexisting user", "We get an exception")
 
-        val user = User(42,"henri@dusouris.fr", "Henri", "Dusouris", LocalDate.of(1891, 5, 31))
+        val user = User(42, "henri@dusouris.fr", "Henri", "Dusouris", LocalDate.of(1891, 5, 31))
 
         service.updateUser(user, "marcel@durat.fr", "Henri", "Dusouris", LocalDate.of(1891, 5, 31))
     }

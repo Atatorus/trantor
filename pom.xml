@@ -8,7 +8,7 @@
     <version>0.1</version>
     <packaging>jar</packaging>
 
-    <name>fr.atatorus trantor</name>
+    <name>Trantor, a simple test reporting tool</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -18,6 +18,7 @@
         <java.version>1.8</java.version>
         <dokka.version>1.4.20</dokka.version>
         <junit-jupiter.version>5.7.0</junit-jupiter.version>
+        <slf4j.version>1.7.30</slf4j.version>
     </properties>
 
     <dependencies>
@@ -30,6 +31,11 @@
             <groupId>org.thymeleaf</groupId>
             <artifactId>thymeleaf</artifactId>
             <version>3.0.12.RELEASE</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -75,7 +81,7 @@
                 <executions>
                     <execution>
                         <id>compile</id>
-                        <phase>compile</phase>
+                        <phase>process-sources</phase>
                         <goals>
                             <goal>compile</goal>
                         </goals>

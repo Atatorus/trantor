@@ -206,6 +206,7 @@ class TestsReport(val title: String, descriptions: List<String>) {
 
     val descriptions: MutableList<String> = arrayListOf()
     val tests: MutableMap<String, Test> = hashMapOf()
+    val fileName = title.replace(Regex("[^a-zA-Z0-9]"), "")
 
     init {
         this.descriptions += descriptions
@@ -215,6 +216,12 @@ class TestsReport(val title: String, descriptions: List<String>) {
 
     operator fun set(testName: String, test: Test) {
         tests[testName] = test
+    }
+
+    fun testCount() = tests.size
+
+    fun testSuccessful() = tests.values.count { test ->
+        test.testCases.all { it.status == TestStatus.successful }
     }
 
 }

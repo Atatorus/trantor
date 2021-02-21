@@ -257,7 +257,6 @@ class BookServiceTest {
 
         assertEquals(book, service.getBook(book.id))
 
-        reporter.setResponseExample(book.toString())
     }
 
     @Test
@@ -287,7 +286,6 @@ class BookServiceTest {
         assertNotNull(books.filter { it.title == "Souvenir d'un as" })
         assertNotNull(books.filter { it.title == "Comment je me suis crashé" })
 
-        reporter.setResponseExample(books.toString())
     }
 
     @Test
@@ -316,7 +314,6 @@ class BookServiceTest {
 
         assertEquals(updated, service.getBook(book.id))
 
-        reporter.setResponseExample(updated.toString())
     }
 
     @Test
@@ -327,7 +324,7 @@ class BookServiceTest {
         val book = Book(42, "Marcel Durat", "Souvenir d'un as")
 
         assertThrows<RuntimeException> {
-            val updated = service.updateBook(book, "Henri Durat", "Comment je me suis crashé")
+            service.updateBook(book, "Henri Durat", "Comment je me suis crashé")
         }
     }
 

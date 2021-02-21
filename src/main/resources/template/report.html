@@ -203,6 +203,23 @@
             height: 100%;
             margin: 0;
         }
+        .wrapper {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        .header, .footer {
+            padding: 10px;
+            background: silver;
+        }
+        .content {
+            padding-left: 10px;
+            padding-right: 10px;
+            margin-top: 5px;
+            margin-bottom: 5px;
+            overflow: auto;
+            flex: 1;
+        }
         .testcase {
             border-collapse: collapse;
             border: solid 3px;
@@ -231,30 +248,13 @@
             background: lightcoral;
             text-align: center;
         }
-        .wrapper {
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-        }
-        .header, .footer {
-            padding: 10px;
-            background: silver;
-        }
-        .content {
-            padding-left: 10px;
-            padding-right: 10px;
-            margin-top: 5px;
-            margin-bottom: 5px;
-            overflow: auto;
-            flex: 1;
-        }
 
     </style>
 </head>
 <body>
 <div class = "wrapper">
     <div class="header">
-        <h1 th:text = "|Report : ${title}|">Report : TestClass</h1>
+        <h1 th:text = "|${application} : ${title}|">Report : TestClass</h1>
         <p th:each = "line: ${descriptionLines}" th:text = "${line}"></p>
     </div>
 

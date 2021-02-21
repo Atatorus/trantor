@@ -235,6 +235,7 @@ class BookService {
 
     companion object Database {
         var id = 0
+        @JvmField
         val books = arrayListOf<Book>()
     }
 

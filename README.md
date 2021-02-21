@@ -1,6 +1,6 @@
 # Presentation
 
-Trantor is a tool to produce test reports intended for a person outside the development team. The generated reports are
+Trantor is a basic test reporting tool which reports are intended for a person outside the development team. The generated reports are
 more meaningful than the reports produced by a tool such as Surefire, without require too much time for a developer. For
 each test case, we have its description, the expected result, and whether the test is successful or not.
 

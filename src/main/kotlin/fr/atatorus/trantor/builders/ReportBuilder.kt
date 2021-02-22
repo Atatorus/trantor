@@ -201,8 +201,8 @@ import fr.atatorus.trantor.models.TestsReport
 interface ReportBuilder {
 
     /**
-     * Called at then end of tests in one test class to generate report.
+     * Called at the end of all tests of a test class.
      */
-    fun generateReport(testsReport: TestsReport)
+    fun addReport(testsReport: TestsReport)
 
 }

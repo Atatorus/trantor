@@ -218,7 +218,7 @@ class JupiterTestReporter private constructor(val builder: ReportBuilder, val re
     ITestRecorder by recorder, AfterAllCallback, TestWatcher {
 
     override fun afterAll(context: ExtensionContext) {
-        builder.generateReport(recorder.report)
+        builder.addReport(recorder.report)
     }
 
     override fun testDisabled(context: ExtensionContext, reason: Optional<String>) {

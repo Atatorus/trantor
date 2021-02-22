@@ -213,7 +213,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.RegisterExtension
 import kotlin.test.assertEquals
-import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -268,7 +267,7 @@ class BookServiceTest {
         val book1 = service.createBook("Marcel Durat", "Souvenir d'un as")
         val book2 = service.createBook("Marcel Durat", "Souvenir d'un as")
 
-        assertNotEquals(book1.id, book2.id)
+        assertTrue(book1.id != book2.id)
     }
 
     @Test

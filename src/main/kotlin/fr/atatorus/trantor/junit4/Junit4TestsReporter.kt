@@ -216,7 +216,7 @@ class Junit4TestsReporter private constructor(val reportBuilder: ReportBuilder, 
                 try {
                     base.evaluate()
                 } finally {
-                    reportBuilder.generateReport(report)
+                    reportBuilder.addReport(report)
                 }
             }
         }

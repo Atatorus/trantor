@@ -228,7 +228,7 @@ object HtmlReportBuilder : ReportBuilder {
 
     private val logger = LoggerFactory.getLogger(HtmlReportBuilder::class.java)
 
-    private val generatedReports = arrayListOf<TestsReport>()
+    private val reports = arrayListOf<TestsReport>()
     private val templateResolver: ITemplateResolver = ClassLoaderTemplateResolver().apply {
         prefix = "/template"
         suffix = ".html"
@@ -239,43 +239,55 @@ object HtmlReportBuilder : ReportBuilder {
     }
 
     init {
-        Paths.get(rootDirectory, TRANTOR_FOLDER).toFile().deleteRecursively()
-        Files.createDirectories(Paths.get(rootDirectory, TRANTOR_FOLDER))
         Runtime.getRuntime().addShutdownHook(Thread {
             try {
-                updateIndex()
+                generateReports()
             } catch (e: Exception) {
-                logger.error("Error updating index", e)
+                logger.error("Error generating reports", e)
             }
         })
     }
 
-    override fun generateReport(testsReport: TestsReport) {
+    override fun addReport(testsReport: TestsReport) {
+        reports += testsReport
+    }
 
-        getWriter("${testsReport.title.replace(Regex("[^a-zA-Z0-9]"), "")}.html").use { writer ->
-            val ctx: IContext = object : IContext {
-                override fun getLocale() = Locale.getDefault()
+    private fun generateReports() {
 
-                override fun containsVariable(name: String) = name in variableNames
+        initialize()
 
-                override fun getVariableNames(): MutableSet<String> =
-                    hashSetOf("application", "title", "descriptionLines", "tests", "now")
+        reports.forEach { report ->
+            getWriter("${report.title.replace(Regex("[^a-zA-Z0-9]"), "")}.html").use { writer ->
+                val ctx: IContext = object : IContext {
+                    override fun getLocale() = Locale.getDefault()
 
-                override fun getVariable(name: String): Any? {
-                    return when (name) {
-                        "application" -> applicationName
-                        "title" -> testsReport.title
-                        "descriptions" -> testsReport.descriptions
-                        "tests" -> testsReport.tests.values.sortedBy { it.order }
-                        "now" -> now()
-                        else -> null
+                    override fun containsVariable(name: String) = name in variableNames
+
+                    override fun getVariableNames(): MutableSet<String> =
+                        hashSetOf("application", "title", "descriptionLines", "tests", "now")
+
+                    override fun getVariable(name: String): Any? {
+                        return when (name) {
+                            "application" -> applicationName
+                            "title" -> report.title
+                            "descriptions" -> report.descriptions
+                            "tests" -> report.tests.values.sortedBy { it.order }
+                            "now" -> now()
+                            else -> null
+                        }
                     }
                 }
-            }
 
-            templateEngine.process("/report", ctx, writer)
-            generatedReports += testsReport
+                templateEngine.process("/report", ctx, writer)
+            }
         }
+        updateIndex()
+    }
+
+    private fun initialize() {
+        val trantorPath = Paths.get(rootDirectory, TRANTOR_FOLDER)
+        trantorPath.toFile().deleteRecursively()
+        Files.createDirectories(trantorPath)
     }
 
     private fun updateIndex() {
@@ -293,7 +305,7 @@ object HtmlReportBuilder : ReportBuilder {
                     return when (name) {
                         "application" -> applicationName
                         "now" -> now()
-                        "reports" -> generatedReports
+                        "reports" -> reports
                         else -> null
                     }
                 }

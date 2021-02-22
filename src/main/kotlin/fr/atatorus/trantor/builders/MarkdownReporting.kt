@@ -202,7 +202,7 @@ import fr.atatorus.trantor.models.TestsReport
  */
 object MarkdownReporting : ReportBuilder {
 
-    override fun generateReport(testsReport: TestsReport) {
+    override fun addReport(testsReport: TestsReport) {
         TODO()
     }
 

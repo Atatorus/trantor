@@ -262,7 +262,7 @@ public class BookServiceJavaTest {
         Book book1 = service.createBook("Marcel Durat", "Souvenir d'un as");
         Book book2 = service.createBook("Marcel Durat", "Souvenir d'un as");
 
-        assertNotEquals(book1.getId(), book2.getId());
+        assertTrue(book1.getId() != book2.getId());
     }
 
     @Test

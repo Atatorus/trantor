@@ -217,6 +217,7 @@ object ReportConfiguration {
         return Junit4TestsReporter.htmlReporter(root, applicationName, title, *descriptions)
     }
 
+    @JvmStatic
     fun jupiterReporting(title: String, vararg descriptions: String): JupiterTestReporter {
         return JupiterTestReporter.htmlJupiterReporter(root, applicationName, title, *descriptions)
     }

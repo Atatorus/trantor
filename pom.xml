@@ -5,7 +5,7 @@
 
     <groupId>fr.atatorus</groupId>
     <artifactId>trantor</artifactId>
-    <version>0.1</version>
+    <version>0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>Trantor, a simple test reporting tool</name>
@@ -19,6 +19,7 @@
         <junit.version>[4.9,)</junit.version>
         <junit-jupiter.version>[5.1,)</junit-jupiter.version>
         <slf4j.version>1.7.30</slf4j.version>
+        <surefire.version>2.22.2</surefire.version>
     </properties>
 
     <dependencies>
@@ -44,15 +45,21 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>${junit.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
             <version>${junit-jupiter.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.vintage</groupId>
+            <artifactId>junit-vintage-engine</artifactId>
+            <version>${junit-jupiter.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${junit.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -76,7 +83,10 @@
                     <verbose>true</verbose>
                 </configuration>
             </plugin>
-
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>${surefire.version}</version>
+            </plugin>
             <plugin>
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-maven-plugin</artifactId>
@@ -132,4 +142,12 @@
             <url>https://jcenter.bintray.com/</url>
         </pluginRepository>
     </pluginRepositories>
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <name>GitHub Atatorus Packages</name>
+            <url>https://maven.pkg.github.com/atatorus/trantor</url>
+        </repository>
+    </distributionManagement>
+
 </project>
